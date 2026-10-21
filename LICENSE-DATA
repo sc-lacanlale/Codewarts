@@ -1,0 +1,22 @@
+Dataset, recorded landmark data, and trained model weights
+
+Copyright (c) 2026 The Codewarts / FSL Translator contributors
+(Shanley Clarence Lacanlale, certainlynotnathan, ryvxz)
+
+The dataset, the recorded landmark data, and the trained model weights in this
+project are licensed under the Creative Commons Attribution-NonCommercial 4.0
+International License (CC BY-NC 4.0).
+
+https://creativecommons.org/licenses/by-nc/4.0/
+
+That licence covers:
+
+- recorded landmark sequences and other dataset files
+- the trained weights, scalers, and label files under models/
+- the same weight files when they are published as GitHub Release assets
+
+You must give appropriate credit, and you may not use this material for
+commercial purposes. The licence text is the one published by Creative Commons
+at the link above.
+
+Source code is not covered by this note. Source code is MIT. See LICENSE.

@@ -1,95 +1,115 @@
-# CodeWarts FSL Interpreter
+# Filipino Sign Language translator
 
-## Filipino Sign Language Translator
+[![CI](https://github.com/sc-lacanlale/Codewarts/actions/workflows/ci.yml/badge.svg)](https://github.com/sc-lacanlale/Codewarts/actions/workflows/ci.yml)
 
-### Purpose
-We implement a Filipino Sign Language Recognition model for both static and dynamic hand gestures using MediaPipe extracted landmarks. This project features a 105-action model with anti-overfitting architecture for accurate real-time sign language translation.
+Real-time Filipino Sign Language (FSL) recognition. A webcam frame goes through MediaPipe Holistic, a 30-frame landmark window, and an LSTM. The predicted gloss is shown in Tagalog and can be spoken with a Filipino neural voice.
 
-### 🎯 Features
-- **105 Sign Language Actions** - Comprehensive FSL vocabulary including greetings, numbers, colors, days, months, and common phrases
-- **Anti-Overfitting Architecture** - Dropout layers and L2 regularization for robust performance
-- **Real-time Detection** - Webcam-based live testing with MediaPipe Holistic
-- **Video Processing Pipeline** - Complete workflow from video capture to model training
+The repository is still named `Codewarts`. It is planned to be renamed `fsl-sign-language-translator`. Earlier notes called the project Senyas.
 
-## 🚀 Quick Start
+## Demo
 
-### Installation
-```shell
-# Create virtual environment (optional)
-conda create --name fsl-translator python=3.11 -y
-conda activate fsl-translator
+TODO: add a short GIF of live signing, the recognized gloss, and Tagalog speech. Record it from `python -m fsl.app` and save it as `docs/demo.gif`.
 
-# Install dependencies
-pip install -r requirements.txt
+## Pipeline
+
+```mermaid
+flowchart LR
+  video[Video] --> holistic[MediaPipe Holistic]
+  holistic --> sequence["30-frame sequence"]
+  sequence --> lstm["StandardScaler + LSTM"]
+  lstm --> label[Label]
+  label --> tts[Tagalog TTS]
 ```
 
-### Test Your Model with Webcam
+Each frame is a 258-float vector: 33 pose landmarks with visibility (132), the left hand (63), and the right hand (63). Missing parts are zeros. A `StandardScaler` fit on the training frames normalizes the window, then a Conv1D plus two LSTM layers scores it. With `GEMINI_API_KEY` set, Gemini can turn the gloss sequence into one Tagalog sentence. Without that key, the Tagalog glosses are joined.
+
+The model the app loads has **15 classes**. Details, the label table, and the legacy 11-class checkpoint are in [docs/model.md](docs/model.md).
+
+## Quick start
+
+Tested with Python 3.12. The fifth command does not need a camera.
+
 ```bash
-cd model-processing
-python test_live.py
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[app]"
+python scripts/download_holistic_landmarker.py
+python -m fsl.app --smoke
 ```
-Press `Q` to quit the webcam feed.
 
-## 📁 Project Structure
+On Windows, activate with `.venv\Scripts\activate` instead of `source`.
 
-### Video Processing
-1. `arrange_files.ipynb` - Manipulate directories and files for convenience
-2. `video_capture.ipynb` - Capture 30-frame videos for training data
-3. `video_preprocess.ipynb` - Normalize videos to exactly 30 frames
-4. `video_landmark_extraction.ipynb` - Extract MediaPipe landmarks from videos
+Open the webcam UI with `python -m fsl.app`. The scripted pitch mode is `python -m fsl.app --demo`. The first webcam launch downloads the Holistic task file if `scripts/download_holistic_landmarker.py` has not been run. Linux needs a display and, for the Tk window, the `python3-tk` package.
 
-### Model Processing
-1. `train_model.py` - Train the LSTM model with anti-overfitting architecture
-2. `test_live.py` - Real-time webcam testing
-3. `test_video.py` - Test with pre-recorded videos
-4. `verify_model.py` - Verify model compatibility
+Copy `.env.example` to `.env` if you want Gemini rewriting or a different TTS voice. The app runs without either.
 
-### Models
-- `fsl_105_model.h5` - Trained model with 105 actions
-- `action_labels.npy` - List of all 105 sign language actions
-- Backup files of previous models
+## Develop
 
-## 🎓 Model Architecture
+```bash
+pip install -e ".[app,dev]"
+ruff check .
+ruff format --check .
+pytest
+```
 
-**Anti-Overfitting Design:**
-- Conv1D layer (64 filters) + Dropout (0.3)
-- LSTM (64 units) with L2 regularization + Dropout (0.5)
-- LSTM (128 units) with L2 regularization + Dropout (0.5)
-- Dense (64 units) with L2 regularization + Dropout (0.3)
-- Output layer (105 classes, softmax)
+CI on pull requests installs the `dev` extra, runs Ruff, runs pytest, and runs `python -m fsl.app --smoke`.
 
-**Input:** 30 frames × 258 landmarks (pose + hands)  
-**Output:** Predicted sign with confidence score
+## Layout
 
-## 📊 105 Supported Actions
+```
+src/fsl/          library: landmarks, sequence shaping, LSTM, labels, TTS
+apps/             Tk webcam app and the scripted demo
+notebooks/        video prep and the Colab trainers
+scripts/          download the Holistic task file and the weights
+models/fsl15/     15-class checkpoint the app loads
+models/fsl11/     earlier 11-class checkpoint
+tests/
+```
 
-Numbers, colors, days of the week, months, greetings, family members, food items, and common phrases including:
-- Greetings: HELLO, GOOD_MORNING, GOOD_AFTERNOON, GOOD_EVENING
-- Responses: YES, NO, THANK_YOU, YOURE_WELCOME
-- Questions: HOW_ARE_YOU, IM_FINE
-- And 95+ more actions!
+## Results
 
-See `models/action_labels.npy` for the complete list.
+The shipped checkpoint's last dense layer has 15 units, and `models/fsl15/labels.npy` lists 15 glosses, in this order:
 
-## 📖 Documentation
+`GOOD_AFTERNOON`, `NICE_TO_MEET_YOU`, `YES`, `NO`, `THANK_YOU`, `HOW_ARE_YOU`, `ONE`, `TWO`, `THREE`, `SIX`, `SEVEN`, `CORRECT`, `WRONG`, `IM_FINE`, `UNDERSTAND`.
 
-- `MODEL_SETUP_COMPLETE.md` - Complete setup guide and troubleshooting
-- `COLAB_WORKFLOW_GUIDE.md` - Google Colab training workflow
-- `QUICK_START.md` - Quick testing guide
+`model.count_params()` on `models/fsl15/model.h5` is 190,671 with Keras 3.15.1.
 
-## 🔧 Requirements
+Those checkpoints, scalers, and label files are also on GitHub Release [model-weights-v1](https://github.com/sc-lacanlale/Codewarts/releases/tag/model-weights-v1). `python scripts/download_weights.py` fetches them when they are not already under `models/`.
 
-- Python 3.9+
-- TensorFlow
-- MediaPipe 0.10.21
-- OpenCV
-- NumPy
-- scikit-learn
+TODO: held-out accuracy, per-class scores, and a confusion matrix. This repository does not include the clip set or an evaluation split, so those numbers are not reported here. Do not treat a smoke-test argmax as accuracy. `python -m fsl.app --smoke` only checks that a synthetic 30×258 window produces a 15-way softmax.
 
-## 📝 License
+## Dataset
 
-Senyas: FSL Translator code and model weights are released under the CC-BY-NC 4.0 license.
+Training notebooks use the Kaggle set [`previlace/fsl-105`](https://www.kaggle.com/datasets/previlace/fsl-105) (`labels.csv` and `fsl_clips/<id>/*.MOV`) and keep the 15 glosses above. Clip counts are not stored in this repository. The videos themselves are not committed.
 
-## ⭐ Acknowledgments
+## Stack
 
-Based on the Senyas project. Enhanced with 105-action model and anti-overfitting architecture for improved accuracy and generalization.
+Python, TensorFlow / Keras, scikit-learn, MediaPipe Tasks (Holistic), OpenCV, Tk, edge-tts. Gemini is optional.
+
+## Limitations
+
+- The vocabulary is 15 glosses, not a general FSL dictionary.
+- Recognition quality on real signing has not been measured in this repo.
+- The webcam path needs a local camera, a display, the Holistic `.task` file, and the system EGL library (`libegl1` on Debian or Ubuntu). MediaPipe's Holistic graph was not exercised on a live camera in CI.
+- edge-tts needs a network call at speech time. gTTS and pyttsx3 are fallbacks.
+- Gemini is used only when `GEMINI_API_KEY` is set.
+
+## Roadmap
+
+- Demo GIF.
+- A held-out evaluation on the 15-gloss subset, with per-class scores.
+- After this pull request is merged, drop the unused history blobs listed in [docs/model.md](docs/model.md). The shipped weights stay in the tree.
+
+## Team and roles
+
+- **Shanley Clarence Lacanlale** (`sc-lacanlale`) — TODO: role.
+- **certainlynotnathan** (Nathaniel Joseph) — TODO: role. Commits authored as NATHANIEL JOSEPH, and the commits that use the GitHub noreply address for certainlynotnathan, are this person.
+- **ryvxz** — TODO: role.
+
+## Licence
+
+Source code is under the MIT License. See [LICENSE](LICENSE).
+
+Copyright (c) 2026 The Codewarts / FSL Translator contributors (Shanley Clarence Lacanlale, certainlynotnathan, ryvxz).
+
+The dataset, recorded landmark data, and trained model weights are not under MIT. They are licensed under CC BY-NC 4.0. See [LICENSE-DATA](LICENSE-DATA) and <https://creativecommons.org/licenses/by-nc/4.0/>.

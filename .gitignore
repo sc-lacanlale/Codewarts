@@ -1,1 +1,35 @@
-/web-application/node_modules
+# OS and editors
+.DS_Store
+**/.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# MediaPipe Holistic graph. Fetch with scripts/download_holistic_landmarker.py.
+models/holistic_landmarker.task
+
+# Training logs and one-off backups
+Logs/
+*.backup
+
+# Notebook and local media scratch
+.ipynb_checkpoints/
+*.mp4
+*.mov
+
+# Frontend leftovers
+node_modules/

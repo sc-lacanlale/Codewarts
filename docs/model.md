@@ -96,38 +96,33 @@ Committed paths:
 | `models/fsl11/scaler.pkl` | Scaler for the 11-class model, 6,807 bytes |
 | `models/fsl11/labels.npy` | 11 glosses |
 
-`scripts/download_weights.py` looks for GitHub Release `model-weights-v1` on `sc-lacanlale/fsl-sign-language-translator` and then on `sc-lacanlale/Codewarts`. While these files are in the clone it prints `present` and exits 0. The release does not exist yet. Upload instructions are in the module docstring of `src/fsl/weights.py`. Do not delete the committed weights until that release is uploaded.
+The same seven files are GitHub Release [model-weights-v1](https://github.com/sc-lacanlale/Codewarts/releases/tag/model-weights-v1). `scripts/download_weights.py` tries `sc-lacanlale/fsl-sign-language-translator` first, then `sc-lacanlale/Codewarts`. While the files are in the clone it prints `present` and exits 0. A run with the local files removed downloaded each asset from the Codewarts release, matched the committed SHA-256, and `python -m fsl.app --smoke` loaded both checkpoints (15 classes / 190,671 parameters, and 11 classes / 190,411 parameters). The printed top label on that zero window is a load check, not accuracy.
 
 The MediaPipe graph is not committed. `scripts/download_holistic_landmarker.py` fetches:
 
 `https://storage.googleapis.com/mediapipe-models/holistic_landmarker/holistic_landmarker/float16/latest/holistic_landmarker.task`
 
-## History purge (not done)
+## History purge (approved, not run)
 
-Git history was not rewritten. Removing a file in this change only stops tracking it from the next commit. A later `git filter-repo` plus force-push, which the owner has to approve, would be required to drop the blobs below.
+Git history has not been rewritten. The owner approved a purge, and it has to run after the cleanup pull request is merged. Running it earlier changes every commit hash and breaks that pull request. Do not force-push before the merge.
 
-Removed from the tree in this cleanup, still in history:
+The current pack is 38.59 MiB (`git count-objects -vH`). The paths below are absent from the tip and account for 39,238,194 unique uncompressed blob bytes (37.42 MiB). Those same blobs occupy 31,731,261 bytes inside the current pack (30.26 MiB). A repack after the purge should leave a pack near 8 MiB. The shipped `models/fsl15/` and `models/fsl11/` files are not in this list.
 
-| Path | Largest blob |
+| Path | Unique blob bytes |
 |---|---|
-| `models/holistic_landmarker.task` | 13,683,609 bytes (13.05 MiB) |
-| `models/NF1.h5.backup` | 2,927,224 bytes (2.79 MiB) |
-| `models/group1-shard1of1.bin.backup` | 950,332 bytes (0.91 MiB) |
-| `Logs/train/events.out.tfevents.1686185033.DESKTOP-H6NUQNL.8788.0.v2` | 727,333 bytes (0.69 MiB) |
-| `models/model.json.backup` | 7,715 bytes |
-| `.DS_Store`, `Logs/.DS_Store`, `video-processing/.DS_Store` | 8,196 + 6,148 + 6,148 bytes |
+| `models/holistic_landmarker.task` | 13,683,609 (1 blob) |
+| `asl_webapp/` | 13,284,161 (6 blobs) |
+| `*.backup` (`models/NF1.h5.backup`, `models/group1-shard1of1.bin.backup`, `models/model.json.backup`) | 3,885,271 (3 blobs) |
+| `models/fsl_105_model.h5` | 2,414,592 (1 blob) |
+| `models/fsl_105_model_2.h5` | 2,414,592 (1 blob) |
+| `apps/tanaw-mobile/` | 2,188,388 (169 blobs), plus an 11-byte blob also stored under `frontend/` |
+| `Logs/` | 727,333 (1 TensorBoard event file) |
+| `frontend/` | 555,062 (42 blobs) |
+| `services/` | 64,683 (30 blobs) |
+| `.DS_Store`, `Logs/.DS_Store`, `video-processing/.DS_Store` | 20,492 (3 blobs) |
 
-Already absent from `HEAD` before this cleanup, still in history:
-
-| Path | Largest blob |
-|---|---|
-| `asl_webapp/asl_model.h5` | 8,461,012 bytes (8.07 MiB); an older blob of the same path is about 4.59 MiB |
-| `models/fsl_105_model.h5` | 2,414,592 bytes (2.30 MiB) |
-| `models/fsl_105_model_2.h5` | 2,414,592 bytes (2.30 MiB) |
-| `apps/tanaw-mobile/package-lock.json` | 429,162 bytes |
-| `apps/tanaw-mobile/assets/images/icon.png` | 393,493 bytes |
-| `frontend/package-lock.json` | 232,493 bytes |
+The exact `git filter-repo` commands and the re-clone steps are in the pull request description. Old session notes and `.pyc` files still in history are about 0.11 MiB packed and are not part of this purge.
 
 The 105-class claim in the old README referred to weights that are not in the working tree. The networks this app can load have 15 and 11 outputs.
 
-The `.h5` files that the app still needs are listed above and stay in the tree on purpose.
+The `.h5` files that the app still needs are listed above and stay in the tree on purpose. Dropping them from history is a later choice, only after `scripts/download_weights.py` has been shown to restore them from the release.

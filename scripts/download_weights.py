@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Download LSTM weights from GitHub Release ``model-weights-v1`` when they are missing.
 
-The weights are still in this clone, under ``models/``. This script is the path
-a fresh tree uses after those files are removed from git history. The owner has
-to upload the release assets first. See ``fsl.weights`` for the exact ``gh`` command.
+The release already holds the seven files. This clone also has them under
+``models/``, so a normal run prints ``present`` and exits 0. Pass ``--force``
+to download again. See ``fsl.weights``.
 """
 
 from __future__ import annotations

@@ -1,26 +1,14 @@
-"""Fetch trained weights from a GitHub Release when they are not already on disk.
+"""Fetch trained weights from GitHub Release ``model-weights-v1`` when they are missing.
 
-The clone currently includes the ``.h5``, scaler, and label files under ``models/``.
-Keep those files until a release named ``model-weights-v1`` exists. A history purge
-is a separate step and was not done here. After that purge, this module is how a
-fresh clone gets the weights back.
+The release is published at
+https://github.com/sc-lacanlale/Codewarts/releases/tag/model-weights-v1
+The clone still includes the same ``.h5``, scaler, and label files under ``models/``.
+This module downloads only what is absent. After a history purge removes those
+files, a fresh clone gets them back from the release.
 
-Upload, from a clone that still has the files, after the repo rename::
-
-    mkdir -p /tmp/fsl-weights
-    cp models/fsl15/model.h5 /tmp/fsl-weights/fsl15-model.h5
-    cp models/fsl15/best.h5 /tmp/fsl-weights/fsl15-best.h5
-    cp models/fsl15/scaler.pkl /tmp/fsl-weights/fsl15-scaler.pkl
-    cp models/fsl15/labels.npy /tmp/fsl-weights/fsl15-labels.npy
-    cp models/fsl11/model.h5 /tmp/fsl-weights/fsl11-model.h5
-    cp models/fsl11/scaler.pkl /tmp/fsl-weights/fsl11-scaler.pkl
-    cp models/fsl11/labels.npy /tmp/fsl-weights/fsl11-labels.npy
-    gh release create model-weights-v1 /tmp/fsl-weights/* \\
-        --repo sc-lacanlale/fsl-sign-language-translator \\
-        --title "Model weights v1" \\
-        --notes "15-class LSTM, its best checkpoint, the 11-class LSTM, scalers, and labels."
-
-The script also tries ``sc-lacanlale/Codewarts`` because that is the current repo name.
+``sc-lacanlale/fsl-sign-language-translator`` is tried first so the URL keeps
+working after the planned rename. Until that rename, the download uses
+``sc-lacanlale/Codewarts``.
 """
 
 from __future__ import annotations

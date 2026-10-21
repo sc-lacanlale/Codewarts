@@ -60,7 +60,7 @@ CI on pull requests installs the `dev` extra, runs Ruff, runs pytest, and runs `
 src/fsl/          library: landmarks, sequence shaping, LSTM, labels, TTS
 apps/             Tk webcam app and the scripted demo
 notebooks/        video prep and the Colab trainers
-scripts/          download the Holistic task file and, later, the weights
+scripts/          download the Holistic task file and the weights
 models/fsl15/     15-class checkpoint the app loads
 models/fsl11/     earlier 11-class checkpoint
 tests/
@@ -73,6 +73,8 @@ The shipped checkpoint's last dense layer has 15 units, and `models/fsl15/labels
 `GOOD_AFTERNOON`, `NICE_TO_MEET_YOU`, `YES`, `NO`, `THANK_YOU`, `HOW_ARE_YOU`, `ONE`, `TWO`, `THREE`, `SIX`, `SEVEN`, `CORRECT`, `WRONG`, `IM_FINE`, `UNDERSTAND`.
 
 `model.count_params()` on `models/fsl15/model.h5` is 190,671 with Keras 3.15.1.
+
+Those checkpoints, scalers, and label files are also on GitHub Release [model-weights-v1](https://github.com/sc-lacanlale/Codewarts/releases/tag/model-weights-v1). `python scripts/download_weights.py` fetches them when they are not already under `models/`.
 
 TODO: held-out accuracy, per-class scores, and a confusion matrix. This repository does not include the clip set or an evaluation split, so those numbers are not reported here. Do not treat a smoke-test argmax as accuracy. `python -m fsl.app --smoke` only checks that a synthetic 30×258 window produces a 15-way softmax.
 
@@ -96,16 +98,18 @@ Python, TensorFlow / Keras, scikit-learn, MediaPipe Tasks (Holistic), OpenCV, Tk
 
 - Demo GIF.
 - A held-out evaluation on the 15-gloss subset, with per-class scores.
-- A team-agreed licence file.
-- Optional: publish the weights as GitHub Release `model-weights-v1` and drop them from git history. `scripts/download_weights.py` is written for that, and it is a no-op while the files are still in the tree.
+- After this pull request is merged, drop the unused history blobs listed in [docs/model.md](docs/model.md). The shipped weights stay in the tree.
 
 ## Team and roles
 
-This is a team project. On `main` (13 commits at the time of this cleanup):
-
-- **certainlynotnathan** — teammate. 9 commits are authored as NATHANIEL JOSEPH, 3 as ryvxz, and 1 uses the GitHub noreply address for certainlynotnathan. Those commits added the translator, Tagalog labels, TTS, the live recognition pass, and the demo mode.
-- **Shanley Clarence Lacanlale (`sc-lacanlale`)** — repository owner. TODO: write your role on this project. Commits on `main` are not authored by the `xian` git identity.
+- **Shanley Clarence Lacanlale** (`sc-lacanlale`) — TODO: role.
+- **certainlynotnathan** (Nathaniel Joseph) — TODO: role. Commits authored as NATHANIEL JOSEPH, and the commits that use the GitHub noreply address for certainlynotnathan, are this person.
+- **ryvxz** — TODO: role.
 
 ## Licence
 
-This repository has no `LICENSE` file. An older README said the code and weights were under CC-BY-NC 4.0, and a nested README pointed at a licence file that is not in the tree. The team has to agree on a licence and add the file. Until then, do not treat the code or the weights as licensed for reuse.
+Source code is under the MIT License. See [LICENSE](LICENSE).
+
+Copyright (c) 2026 The Codewarts / FSL Translator contributors (Shanley Clarence Lacanlale, certainlynotnathan, ryvxz).
+
+The dataset, recorded landmark data, and trained model weights are not under MIT. They are licensed under CC BY-NC 4.0. See [LICENSE-DATA](LICENSE-DATA) and <https://creativecommons.org/licenses/by-nc/4.0/>.
